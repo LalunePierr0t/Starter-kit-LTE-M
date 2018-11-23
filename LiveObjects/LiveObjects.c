@@ -19,23 +19,7 @@ int32_t                                     _qoS = 0;
 
 
 //----
-/**
- *  Live Objects MQTT emit topics
- */
-char _topicConfig[] 			= "dev/cfg";
-char _topicData[]				= "dev/data";
-char _topicResource[] 			= "dev/rsc";
-char _topicCommandRsp[] 		= "dev/cmd/res";
-char _topicResourceUpdResp[] 	= "dev/rsc/upd/res";
-char _topicResourceUpdErr[] 	= "dev/rsc/upd/err";
 
-//----
-/**
- *  Live Objects MQTT subscribe topics
- */
-char _topicConfigUpdate[] 		= "dev/cfg/upd";
-char _topicCommand[] 			= "dev/cmd";
-char _topicResourceUpd[]		= "dev/rsc/upd";
 
 //---
 /**
@@ -118,10 +102,11 @@ static void DcsStateHandler
 
             //subscribe to Live Objects Topics
 
-            LE_INFO("Subscribe to %s, %s, %s", _topicConfigUpdate,_topicResourceUpd, _topicCommand);
+            LE_INFO("Subscribe to %s, %s, %s, %s ", _topicConfigUpdate,_topicResourceUpd, _topicCommand, _topicFifo);
             mqttClient_Subscribe(_cliMqttRef, _topicCommand);
             mqttClient_Subscribe(_cliMqttRef, _topicConfigUpdate);
             mqttClient_Subscribe(_cliMqttRef, _topicResourceUpd);
+            mqttClient_Subscribe(_cliMqttRef, _topicFifo);
 
         	le_timer_Start(_timerRef);
 
@@ -205,8 +190,8 @@ void liveobjects_pubData
 		char* payload,
 		char* model,
 		char* tags,
-		double latitude,
-		double longitude
+		int latitude,
+		int longitude
 )
 {
 	char* s = swirjson_szSerialize("s", streamid, 0);
@@ -217,12 +202,12 @@ void liveobjects_pubData
 	char* m = swirjson_szSerialize("m", model, 0);
 
 	char loc[30] = "";
-	sprintf(loc, "\"loc\":[%lf,%lf]", latitude, longitude);
+	sprintf(loc, "\"loc\":[%d,%d]", latitude, longitude);
 
 	char t[100] = "";
 	sprintf(t, "\"t\":%s", tags);
 
-	char message[1024] = "";
+	char message[256] = "";
 	sprintf(message, "{%s, %s, %s, %s, %s}", s, m, v, loc, t);
 
 	LE_INFO("Publish data , %s", message);

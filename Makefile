@@ -9,6 +9,7 @@ $(TARGETS):
 		  -i $(LEGATO_ROOT)/interfaces/dataConnectionService \
 		  -i $(LEGATO_ROOT)/interfaces/modemServices \
 		  -i $(LEGATO_ROOT)/interfaces/positioning \
+		  -i $(LEGATO_ROOT)/interfaces/positioning \
 		  OrangeStarterKit.adef
 
 clean:

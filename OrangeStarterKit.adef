@@ -2,14 +2,14 @@ sandboxed: false
 
 executables:
 {
-	OrangeStarterKit = ( OrangeStarterKitComponent dataProfileComponent LiveObjects GNSSComponent)
+	OrangeStarterKit = ( smsClient OrangeStarterKitComponent dataProfileComponent LiveObjects  )
 }
 
 processes:
 {
 	envVars:
 	{
-		LE_LOG_LEVEL = DEBUG
+		LE_LOG_LEVEL = INFO
 	}
 
 	run:
@@ -24,25 +24,16 @@ processes:
 version: 1.0.0
 maxFileSystemBytes: 512K
 
-start: auto
 
 bindings:
 {
-    OrangeStarterKit.GNSSComponent.le_pos                   -> positioningService.le_pos
-    OrangeStarterKit.GNSSComponent.le_posCtrl               -> positioningService.le_posCtrl
-    
-    OrangeStarterKit.LiveObjects.mqttClient 				-> mqttClient.mqttClient
-    OrangeStarterKit.LiveObjects.le_data 					-> dataConnectionService.le_data
-    
-    OrangeStarterKit.dataProfileComponent.le_data 			-> dataConnectionService.le_data
-    OrangeStarterKit.dataProfileComponent.le_mdc 			-> modemService.le_mdc
-    
-    OrangeStarterKit.OrangeStarterKitComponent.le_mrc             -> modemService.le_mrc
-    
+    OrangeStarterKit.smsClient.le_sms                           -> modemService.le_sms
+    OrangeStarterKit.LiveObjects.mqttClient                     -> mqttClient.mqttClient
+    OrangeStarterKit.LiveObjects.le_data                        -> dataConnectionService.le_data
+    OrangeStarterKit.dataProfileComponent.le_data               -> dataConnectionService.le_data
+    OrangeStarterKit.dataProfileComponent.le_mdc                -> modemService.le_mdc
     OrangeStarterKit.OrangeStarterKitComponent.le_mdc 		-> modemService.le_mdc
-    OrangeStarterKit.OrangeStarterKitComponent.le_info 		-> modemService.le_info   	
+    OrangeStarterKit.OrangeStarterKitComponent.le_info 		-> modemService.le_info  
     OrangeStarterKit.OrangeStarterKitComponent.ma_led 		-> ledService.ma_led
- 	OrangeStarterKit.OrangeStarterKitComponent.le_adc		-> modemService.le_adc
-
-    
+    OrangeStarterKit.OrangeStarterKitComponent.le_adc		-> modemService.le_adc
 }

@@ -9,20 +9,20 @@ cflags:
 {
 	-I $CURDIR/../LiveObjects
 	-I $CURDIR/../dataProfileComponent
-    -I $CURDIR/../GNSSComponent
-    
+	-I $CURDIR/../smsClient
 }
 
 requires:
 {
 	api:
 	{
-		le_mdc = modemServices/le_mdc.api 
+        le_mdc = modemServices/le_mdc.api 
+        
         le_info = modemServices/le_info.api 
+        
         le_adc = modemServices/le_adc.api 
+        
         ma_led = /home/mangoh/mangOH/apps/LedService/ma_led.api
-        le_mrc = modemServices/le_mrc.api
-	
 	}
 	
 	  file:
@@ -38,5 +38,7 @@ requires:
         /sys/bus/i2c/devices/4-0076/iio:device1/in_temp_input     /sys/devices/i2c-0/0-0076/iio:device1/
         /sys/bus/i2c/devices/4-0076/iio:device1/in_pressure_input /sys/devices/i2c-0/0-0076/iio:device1/
     }
+
+
 	
 }

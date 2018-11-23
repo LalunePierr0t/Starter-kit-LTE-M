@@ -10,21 +10,41 @@
 //--------------------------------------------------------------------------------------------------
 
 #include "legato.h"
-#include "interfaces.h"
-#include "swir_json.h"
+
+#include "../OrangeStarterKitComponent/inc-gen/interfaces.h"
+#include "../OrangeStarterKitComponent/swir_json.h"
 #include "LiveObjects.h"
-#include "GNSSComponent.h"
 #include "dataProfileComponent.h"
 #include "sensorUtils.h"
+#include "legato.h"
+#include "interfaces.h"
+#include "smsSample.h"
+
+//--------------------------------------------------------------------------------------------------
+/**
+ *  App init
+ *
+ */
+//--------------------------------------------------------------------------------------------------
+    const char*   destinationPtr = "x"///< [IN] The destination number.
+
+
 
 #define DATA_TIMER_IN_MS (60000)
+
+static le_timer_Ref_t dataPubTimerRef;
+
+int latitude = 0;
+int longitude = 0;
+
+static bool LedOn;
 
 //-----
 /**
  * Live Objects Settings
  */
 
-char* APIKEY =  "000000000000000000000000000000"; //a valid API key value
+char* APIKEY =  "x"; //a valid API key value
 
 char* NAMESPACE = "starterkit"; //device identifier namespace (device model, identifier class...)
 char imei[20]; //device identifier (IMEI, Serial Number, MAC adress...)
@@ -41,34 +61,35 @@ char                                        _profileAPN[] = "orange.ltem.spec";
 char                                        _profileUser[] = "orange";
 char                                        _profilePwd[] = "orange";
 le_mdc_Auth_t                               _profileAuth = LE_MDC_AUTH_PAP;
-int				                            _dataProfileIndex = 1;
+int											_dataProfileIndex = 1;
 
-static le_timer_Ref_t dataPubTimerRef;
-
-double latitude = 0;
-double longitude = 0;
-
-static bool LedOn;
-
-//-----
-/**
- * GNSS
- */
-
-/*static le_posCtrl_ActivationRef_t           _posCtrlRef = NULL;
-
-typedef enum
-{
-    POSITION_LOCATION_NO = 0,
-    POSITION_LOCATION_2D = 1,
-    POSITION_LOCATION_3D =2
-} position_location_type_t;*/
 
 int count = 0;
 
-static const char PressureFile[]    = "/sys/bus/i2c/devices/4-0076/iio:device1/in_pressure_input";
-static const char TemperatureFile[]   = "/sys/bus/i2c/devices/4-0076/iio:device1/in_temp_input";
+static const char PressureFile[] = "/sys/devices/i2c-0/0-0076/iio:device1/in_pressure_input";
+static const char TemperatureFile[] = "/sys/devices/i2c-0/0-0076/iio:device1/in_temp_input";
 
+void sendSystemCommand(const char *aCmd,char *aCmdOutput,int aCmdOutputSize) {
+    
+    FILE *fp;
+    fp = NULL;
+
+    memset(aCmdOutput,0x00,aCmdOutputSize);
+    LE_INFO("Start cmd       : %s\n",aCmd);
+    
+    fp = popen(aCmd,"r");
+    
+    if (NULL != fp) {
+        LE_INFO("Success cmd     : %s\n",aCmd);
+        while (fgets(aCmdOutput, aCmdOutputSize-1, fp) != NULL) {
+            LE_INFO("Cmd Output      : %s", aCmdOutput);
+        }
+    }
+        else {
+        LE_INFO("Failed cmd : %s",aCmd);
+    }
+    pclose(fp);
+}
 
 /**
  * Reports the pressure kPa.
@@ -120,6 +141,51 @@ static void LedPushStatus
 
     liveobjects_pubData(ledID, payload, model, tags, latitude, longitude);
 
+}
+
+void toLowerCase(char* aString, int aStringSize) {
+    for(int i=0; i<aStringSize; i++){
+            aString[i] = tolower(aString[i]);
+    }
+}
+
+void RemoveSpacesLineFeed(char* aString, int aStringSize)
+{
+    int j=0;
+    for(int i=0; i<aStringSize; i++){
+        if(' ' == aString[i]) {
+            j++;
+        }
+        else if('\n' == aString[i]) {
+            j++;
+        }
+        if(j < aStringSize) {
+            aString[i] = aString[j];
+        }
+        j++;
+    }
+}
+
+static void photoStatus
+(
+    void
+)
+{
+    char* model = "on";
+    char* tags = "[\"photo\", \"url\"]";
+
+    char payload[100] = "";
+    char consoleOutput[256];
+    const char*   cmdSendPic    = "/usr/bin/python /mnt/flash/sendPic.py /mnt/flash/my.gif";
+    
+    
+    sendSystemCommand(cmdSendPic,consoleOutput, sizeof(consoleOutput));
+    RemoveSpacesLineFeed(consoleOutput, sizeof(consoleOutput));
+    smsmo_SendMessage(destinationPtr,consoleOutput);
+    
+    snprintf(payload,sizeof(payload), "{\"photoURL\":\"%s\"}", consoleOutput);
+
+    liveobjects_pubData(cmdResultStreamID, payload, model, tags, latitude, longitude);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -177,7 +243,7 @@ static void sendCommandResultStatus
     char* model = "on";
     char* tags = "[\"hello\", \"world\"]";
 
-	char payload[100] = "{\"hello\":\"world\"}";
+    char payload[100] = "{\"hello\":\"world\"}";
 
     liveobjects_pubData(cmdResultStreamID, payload, model, tags, latitude, longitude);
 }
@@ -199,15 +265,16 @@ static void  command(
 	if (strcmp(req, "hello") == 0) {
 		sendCommandResultStatus();
 	}
-	//send a led request form Live Objects UI (from device/command page)
-	// => {"led" : <<led status>> } message can be seen in the Live Objects Data page
+        else if (strcmp(req, "photo") == 0) {
+            photoStatus();
+        }
 	else if (strcmp(req, "led") == 0) {
 		Led();
 		LedPushStatus();
 	}
 
-	char result[256] = "true";
-	liveobjects_pubCmdRes(result, cid);
+    char result[256] = "true";
+    liveobjects_pubCmdRes(result, cid);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -316,6 +383,10 @@ static void OnIncomingMessage(
     	resourceUpdate(id, old, new, m, atoi(cid));
 
     }
+    else if (strcmp(topicName, _topicFifo) == 0) {
+    	char* req = swirjson_getValue(strdup(value), -1, (char *) "req");
+    	LE_INFO("FIFO MESSAGE  : %s ", req);
+    }
     else
     {
     	char* req = swirjson_getValue(strdup(value), -1, (char *) "req");
@@ -326,103 +397,49 @@ static void OnIncomingMessage(
 
 //--------------------------------------------------------------------------------------------------
 /**
- *  check connexion
- *  radio state 
- *  signal quality
- *  cellId
- */
-//--------------------------------------------------------------------------------------------------
-void connexionStatus()
-{
-    
-    le_onoff_t    onoff;
-    le_result_t res = le_mrc_GetRadioPower(&onoff);
-    
-    if (res == LE_OK) {
-        LE_INFO("Power status : %d", onoff);
-    } else {
-        LE_INFO("get radio power failed");
-    }
-        
-    uint32_t sigQual;
-    
-    res = le_mrc_GetSignalQual(&sigQual);
-    if (res == LE_OK) {
-        LE_INFO("Signal Quality : %d", sigQual);
-    } else {
-        LE_INFO("get signal quality failed");
-    }
-    
-    uint32_t cellId = le_mrc_GetServingCellId();
-    LE_INFO("Cellid : %d", cellId);
-    
-}
-
-//--------------------------------------------------------------------------------------------------
-/**
  *  publish data to liveobjects
  */
 //--------------------------------------------------------------------------------------------------
 void demoTimer()
 {
 
-	char* model = "demo";
+	char* model = "lightV1";
 	char* tags = "[\"lightlevel\", \"count\"]";
 	char pressureStr[100] = "";
 	char temperatureStr[100] = "";
-    char connexionStatusStr[100] = "";
-    char sensorsStr[100] = "";
-	char payload[1024] = "";
-    
-    
+
+	char payload[100] = "";
+
     int32_t lightLevel = 0;
     double pressure = 0;
     double temperature = 0;
 
-    count = count + 1;
-    
-    //get sensors values
     LightSensor(&lightLevel);
 
-    if( mangOH_ReadPressureSensor(&pressure) == LE_OK) {
+    le_result_t result;
+    result = mangOH_ReadPressureSensor(&pressure);
+
+    if( result == LE_OK) {
     	sprintf(pressureStr, ",\"pressure\":%lf", pressure);
     }
     else {
-    	LE_INFO("pressure error");
+    	LE_INFO("pressure error %d", result);
     }
 
+    result = mangOH_ReadTemperatureSensor(&temperature);
     if(mangOH_ReadTemperatureSensor(&temperature) == LE_OK) {
     	sprintf(temperatureStr, ",\"temp\":%lf", temperature);
     }
     else {
-       	LE_INFO("temperature error");
+       	LE_INFO("temperature error %d", result);
        }
 
-    sprintf(sensorsStr, ", \"s\":{\"lightlevel\": %d%s%s}", lightLevel, pressureStr, temperatureStr);
-    
-    GNSS_get(&latitude, &longitude);
-    
-    //get network signal quality, range : 0-5
-    uint32_t sigQual;
-    if(le_mrc_GetSignalQual(&sigQual) == LE_OK) {
-        sprintf(connexionStatusStr, ",\"n\": {\"q\":%d}", sigQual);
-        
-    }
-    else {
-       	sprintf(connexionStatusStr, ",\"n\": {\"q\":\"fail\"}");
-       }   
+	sprintf(payload, "{\"count\":%d, \"lightlevel\": %d%s%s}", count, lightLevel, pressureStr, temperatureStr);
 
-    LE_INFO("connexionStatusStr : %s", connexionStatusStr);
-    
-	sprintf(payload, "{\"count\":%d %s%s}", count, sensorsStr,connexionStatusStr);
-    
-    LE_INFO("payload %d : %s", sizeof(payload), payload);
-                
+	count = count + 1;
+
 	liveobjects_pubData(timerStreamID, payload, model, tags, latitude, longitude);
-                
-                
-    connexionStatus();
-    
+
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -456,20 +473,7 @@ void connectionHandler()
 //--------------------------------------------------------------------------------------------------
 COMPONENT_INIT
 {
-	
-    // init sensors
-    GNSS_start(DATA_TIMER_IN_MS);
-    
-	ma_led_LedStatus_t ledStatus  = ma_led_GetLedStatus();
-
-	if (ledStatus == MA_LED_OFF)
-	{
-	    LedOn = false;
-	} else {
-	    LedOn = true;
-	}
-    
-    // configure Orange network settings
+	// configure Orange network settings
 	dataProfile_set(_dataProfileIndex, _profileAPN, _profileAuth, _profileUser, _profilePwd);
 
 	//connect to liveObjects
@@ -487,4 +491,12 @@ COMPONENT_INIT
 
 	LE_INFO("=========================== Starter KIT LTE-M demo application started");
 
+	ma_led_LedStatus_t ledStatus  = ma_led_GetLedStatus();
+
+	if (ledStatus == MA_LED_OFF)
+	{
+	    LedOn = false;
+	} else {
+		LedOn = true;
+	}
 }
