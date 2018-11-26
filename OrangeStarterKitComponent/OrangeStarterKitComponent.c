@@ -195,6 +195,9 @@ void smsHandler(char *aSmsBody) {
     LE_INFO("SMS content : %s",smsContent);
     if ( 0 == strcmp(smsContent,"photo") ) {
         photoStatus();
+    } 
+    else {
+        LE_INFO("Unkow command !");
     }
     
 }
