@@ -18,7 +18,6 @@ char _topicResourceUpdErr[] 	= "dev/rsc/upd/err";
 char _topicConfigUpdate[] 		= "dev/cfg/upd";
 char _topicCommand[] 			= "dev/cmd";
 char _topicResourceUpd[]		= "dev/rsc/upd";
-char _topicFifo[] 			= "fifo/dataSMS";
 
 LE_SHARED void liveobjects_connect(char* apikey, char* namespace, char* id, void* connectionHandler);
 LE_SHARED void liveobjects_pubData(char* streamid, char* payload, char* model, char* tags, int latitude, int longitude);

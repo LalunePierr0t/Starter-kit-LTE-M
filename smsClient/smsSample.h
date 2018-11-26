@@ -12,8 +12,9 @@
 
 #include "legato.h"
 
+typedef void (*smsExternHandler)(char*);
 
-
+LE_SHARED void SetsmsExternHandler(smsExternHandler asmsHandler);
 //--------------------------------------------------------------------------------------------------
 /**
  * This function simply sends a text message.
@@ -22,7 +23,7 @@
  * @return LE_OK     The function succeed.
  */
 //--------------------------------------------------------------------------------------------------
-le_result_t smsmo_SendMessage
+LE_SHARED le_result_t smsmo_SendMessage
 (
     const char*   destinationPtr, ///< [IN] The destination number.
     const char*   textPtr         ///< [IN] The SMS message text.

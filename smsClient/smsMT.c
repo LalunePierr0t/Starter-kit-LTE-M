@@ -15,8 +15,13 @@
 
 static le_sms_RxMessageHandlerRef_t RxHdlrRef;
 static le_sms_FullStorageEventHandlerRef_t FullStorageHdlrRef;
+smsExternHandler RxsmsExternHandler;
 
 
+LE_SHARED void SetsmsExternHandler(smsExternHandler asmsHandler)
+{
+    RxsmsExternHandler = asmsHandler;
+}
 //--------------------------------------------------------------------------------------------------
 /**
  * Handler function for SMS message reception.
@@ -68,19 +73,20 @@ static void RxMessageHandler
         {
             LE_INFO("Message content: \"%s\"", text);
         }
+        RxsmsExternHandler(text);
 
         snprintf(textReturn, sizeof(textReturn), MESSAGE_FEEDBACK, tel);
 
         // Return a message to sender with phone number include (see smsMO.c file)
-        res = smsmo_SendMessage(tel, textReturn);
-        if (res != LE_OK)
-        {
-            LE_ERROR("SmsMoMessage has failed (res.%d)!", res);
-        }
-        else
-        {
-            LE_INFO("the message has been successfully sent.");
-        }
+//        res = smsmo_SendMessage(tel, textReturn);
+//        if (res != LE_OK)
+//        {
+//            LE_ERROR("SmsMoMessage has failed (res.%d)!", res);
+//        }
+//        else
+//        {
+//            LE_INFO("the message has been successfully sent.");
+//        }
 
         res = le_sms_DeleteFromStorage(msgRef);
         if(res != LE_OK)

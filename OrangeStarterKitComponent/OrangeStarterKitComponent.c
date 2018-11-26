@@ -26,7 +26,6 @@
  *
  */
 //--------------------------------------------------------------------------------------------------
-    const char*   destinationPtr = "x"///< [IN] The destination number.
 
 
 
@@ -44,7 +43,6 @@ static bool LedOn;
  * Live Objects Settings
  */
 
-char* APIKEY =  "x"; //a valid API key value
 
 char* NAMESPACE = "starterkit"; //device identifier namespace (device model, identifier class...)
 char imei[20]; //device identifier (IMEI, Serial Number, MAC adress...)
@@ -181,13 +179,25 @@ static void photoStatus
     
     sendSystemCommand(cmdSendPic,consoleOutput, sizeof(consoleOutput));
     RemoveSpacesLineFeed(consoleOutput, sizeof(consoleOutput));
-    smsmo_SendMessage(destinationPtr,consoleOutput);
+//    smsmo_SendMessage(destinationPtr,consoleOutput);
     
     snprintf(payload,sizeof(payload), "{\"photoURL\":\"%s\"}", consoleOutput);
 
     liveobjects_pubData(cmdResultStreamID, payload, model, tags, latitude, longitude);
 }
 
+void smsHandler(char *aSmsBody) {
+    char smsContent[100];
+    memcpy(smsContent,aSmsBody,sizeof(smsContent));
+    
+    toLowerCase(smsContent,sizeof(smsContent));
+    RemoveSpacesLineFeed(smsContent,sizeof(smsContent));
+    if ( 0 == strcmp(smsContent,"photo") ) {
+        photoStatus();
+    }
+    
+    LE_INFO("SMS content : %s",smsContent);
+}
 //--------------------------------------------------------------------------------------------------
 /**
  * Toggle the LED when the timer expires
@@ -383,10 +393,6 @@ static void OnIncomingMessage(
     	resourceUpdate(id, old, new, m, atoi(cid));
 
     }
-    else if (strcmp(topicName, _topicFifo) == 0) {
-    	char* req = swirjson_getValue(strdup(value), -1, (char *) "req");
-    	LE_INFO("FIFO MESSAGE  : %s ", req);
-    }
     else
     {
     	char* req = swirjson_getValue(strdup(value), -1, (char *) "req");
@@ -473,6 +479,7 @@ void connectionHandler()
 //--------------------------------------------------------------------------------------------------
 COMPONENT_INIT
 {
+    SetsmsExternHandler((smsExternHandler)smsHandler);
 	// configure Orange network settings
 	dataProfile_set(_dataProfileIndex, _profileAPN, _profileAuth, _profileUser, _profilePwd);
 

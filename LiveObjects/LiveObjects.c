@@ -102,11 +102,10 @@ static void DcsStateHandler
 
             //subscribe to Live Objects Topics
 
-            LE_INFO("Subscribe to %s, %s, %s, %s ", _topicConfigUpdate,_topicResourceUpd, _topicCommand, _topicFifo);
+            LE_INFO("Subscribe to %s, %s, %s", _topicConfigUpdate,_topicResourceUpd, _topicCommand);
             mqttClient_Subscribe(_cliMqttRef, _topicCommand);
             mqttClient_Subscribe(_cliMqttRef, _topicConfigUpdate);
             mqttClient_Subscribe(_cliMqttRef, _topicResourceUpd);
-            mqttClient_Subscribe(_cliMqttRef, _topicFifo);
 
         	le_timer_Start(_timerRef);
 
