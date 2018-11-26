@@ -192,11 +192,11 @@ void smsHandler(char *aSmsBody) {
     
     toLowerCase(smsContent,sizeof(smsContent));
     RemoveSpacesLineFeed(smsContent,sizeof(smsContent));
+    LE_INFO("SMS content : %s",smsContent);
     if ( 0 == strcmp(smsContent,"photo") ) {
         photoStatus();
     }
     
-    LE_INFO("SMS content : %s",smsContent);
 }
 //--------------------------------------------------------------------------------------------------
 /**
