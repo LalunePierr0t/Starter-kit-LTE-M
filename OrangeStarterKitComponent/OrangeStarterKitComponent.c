@@ -182,7 +182,7 @@ static void photoStatus
 //    smsmo_SendMessage(destinationPtr,consoleOutput);
     
     snprintf(payload,sizeof(payload), "{\"photoURL\":\"%s\"}", consoleOutput);
-
+    // Reply with the photo url
     liveobjects_pubData(cmdResultStreamID, payload, model, tags, latitude, longitude);
 }
 
@@ -195,7 +195,7 @@ void smsHandler(char *aSmsBody) {
     LE_INFO("SMS content : %s",smsContent);
     if ( 0 == strcmp(smsContent,"photo") ) {
         photoStatus();
-    } 
+    }
     else {
         LE_INFO("Unkow command !");
     }
@@ -272,22 +272,25 @@ static void  command(
 		int cid
 )
 {
-	LE_INFO("CMD %s", req);
-	//send a "hello" request form Live Objects UI (from device/command page)
-	// => {"hello" : "world"} message can be seen in the Live Objects Data page
-	if (strcmp(req, "hello") == 0) {
-		sendCommandResultStatus();
-	}
-        else if (strcmp(req, "photo") == 0) {
-            photoStatus();
-        }
-	else if (strcmp(req, "led") == 0) {
-		Led();
-		LedPushStatus();
-	}
-
     char result[256] = "true";
-    liveobjects_pubCmdRes(result, cid);
+    
+    LE_INFO("CMD %s", req);
+    //send a "hello" request form Live Objects UI (from device/command page)
+    // => {"hello" : "world"} message can be seen in the Live Objects Data page
+    if (strcmp(req, "hello") == 0) {
+        sendCommandResultStatus();
+        liveobjects_pubCmdRes(result, cid);
+    }
+    else if (strcmp(req, "photo") == 0) {
+        liveobjects_pubCmdRes(result, cid);
+        photoStatus();
+    }
+    else if (strcmp(req, "led") == 0) {
+        Led();
+        LedPushStatus();
+        liveobjects_pubCmdRes(result, cid);
+    }
+
 }
 
 //--------------------------------------------------------------------------------------------------
