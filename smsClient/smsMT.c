@@ -73,7 +73,7 @@ static void RxMessageHandler
         {
             LE_INFO("Message content: \"%s\"", text);
         }
-        RxsmsExternHandler(text);
+        RxsmsExternHandler(text,tel);
 
         snprintf(textReturn, sizeof(textReturn), MESSAGE_FEEDBACK, tel);
 

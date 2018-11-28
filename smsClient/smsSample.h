@@ -12,7 +12,7 @@
 
 #include "legato.h"
 
-typedef void (*smsExternHandler)(char*);
+typedef void (*smsExternHandler)(char*, char*);
 
 LE_SHARED void SetsmsExternHandler(smsExternHandler asmsHandler);
 //--------------------------------------------------------------------------------------------------

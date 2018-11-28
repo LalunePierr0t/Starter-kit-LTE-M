@@ -79,13 +79,16 @@ void sendSystemCommand(const char *aCmd,char *aCmdOutput,int aCmdOutputSize) {
     
     if (NULL != fp) {
         LE_INFO("Success cmd     : %s\n",aCmd);
-        while (fgets(aCmdOutput, aCmdOutputSize-1, fp) != NULL) {
-            LE_INFO("Cmd Output      : %s", aCmdOutput);
+        if (NULL != aCmdOutput ) {
+            while (fgets(aCmdOutput, aCmdOutputSize-1, fp) != NULL) {
+                LE_INFO("Cmd Output      : %s", aCmdOutput);
+            }
         }
     }
         else {
         LE_INFO("Failed cmd : %s",aCmd);
     }
+    
     pclose(fp);
 }
 
@@ -147,17 +150,20 @@ void toLowerCase(char* aString, int aStringSize) {
     }
 }
 
-void RemoveSpacesLineFeed(char* aString, int aStringSize)
+void RemoveCharInString(char* aString, int aStringSize,char aCharToremove)
 {
-    int j=0;
-    for(int i=0; i<aStringSize; i++){
-        if(' ' == aString[i]) {
-            j++;
+    int j = 0;
+    for(int i=0; i<aStringSize; i++){               // Parse all string until size of string
+        if(aCharToremove == aString[i]) {           // Char to remove detected
+            for(j = i; j < aStringSize;j++) {       // Find the next character different from character to remove
+                if(aCharToremove != aString[j]) {   // Next character different from character to remove found
+                    aString[i] = aString[j];        // Replace the current character to remove, by the next character different from character to remove found
+                    aString[j] = aCharToremove;     // Replace the next character different from character to remove found by the character to remove
+                    break;
+                }
+            }
         }
-        else if('\n' == aString[i]) {
-            j++;
-        }
-        if(j < aStringSize) {
+        else {
             aString[i] = aString[j];
         }
         j++;
@@ -178,7 +184,8 @@ static void photoStatus
     
     
     sendSystemCommand(cmdSendPic,consoleOutput, sizeof(consoleOutput));
-    RemoveSpacesLineFeed(consoleOutput, sizeof(consoleOutput));
+    RemoveCharInString(consoleOutput, sizeof(consoleOutput),' ');
+    RemoveCharInString(consoleOutput, sizeof(consoleOutput),'\n');
 //    smsmo_SendMessage(destinationPtr,consoleOutput);
     
     snprintf(payload,sizeof(payload), "{\"photoURL\":\"%s\"}", consoleOutput);
@@ -186,18 +193,46 @@ static void photoStatus
     liveobjects_pubData(cmdResultStreamID, payload, model, tags, latitude, longitude);
 }
 
-void smsHandler(char *aSmsBody) {
+#define C_CMD_PHOTO         "photo"
+#define C_CMD_ADDPHONE      "addphone"
+#define C_CMD_REMOVEPHONE   "removephone"
+#define C_CMD_ADDEMAIL      "addemail"
+#define C_CMD_REMOVEEMAIL   "removeemail"
+
+void smsHandler(char *aSmsBody,char *aSenderNb) {
     char smsContent[100];
+    char cmd[256];
+    const char*   cmdModyfyAlert    = "/usr/bin/python /mnt/flash/modifyNotification.py";
     memcpy(smsContent,aSmsBody,sizeof(smsContent));
+    memset(cmd, 0, sizeof(cmd));
     
-    toLowerCase(smsContent,sizeof(smsContent));
-    RemoveSpacesLineFeed(smsContent,sizeof(smsContent));
-    LE_INFO("SMS content : %s",smsContent);
-    if ( 0 == strcmp(smsContent,"photo") ) {
+    toLowerCase(smsContent,strlen(smsContent));
+    RemoveCharInString(smsContent, strlen(smsContent),' ');
+    RemoveCharInString(smsContent, strlen(smsContent),'\n');
+
+    LE_INFO("SMS content    : %s => length : %d",smsContent,strlen(smsContent));
+    if ( 0 == strncmp(smsContent,C_CMD_PHOTO,strlen(C_CMD_PHOTO)) ) {
+        LE_INFO("Photo command");
         photoStatus();
     }
+    else if ( 0 == strncmp(smsContent,C_CMD_ADDPHONE,strlen(C_CMD_ADDPHONE)) ) {
+        LE_INFO("Add Phone number command: %s",aSenderNb);
+    }
+    else if ( 0 == strncmp(smsContent,C_CMD_REMOVEPHONE,strlen(C_CMD_REMOVEPHONE)) ) {
+        LE_INFO("Remove Phone number command: %s",aSenderNb);    
+    }
+    else if ( 0 == strncmp(smsContent,C_CMD_ADDEMAIL,strlen(C_CMD_ADDEMAIL)) ) {
+        LE_INFO("Add email command");   
+        snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_ADDEMAIL,smsContent);
+        sendSystemCommand(cmd,NULL, 0);
+    }
+    else if ( 0 == strncmp(smsContent,C_CMD_REMOVEEMAIL,strlen(C_CMD_REMOVEEMAIL)) ) {
+        LE_INFO("Remove email command"); 
+        snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_REMOVEEMAIL,smsContent);
+        sendSystemCommand(cmd,NULL, 0);
+    }
     else {
-        LE_INFO("Unkow command !");
+        LE_INFO("Unknow command !");
     }
     
 }
