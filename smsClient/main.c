@@ -48,12 +48,6 @@ void sendSystemCommand(const char *aCmd,char *aCmdOutput,int aCmdOutputSize) {
     COMPONENT_INIT
 {
     LE_INFO("SMS Starting");
-//    char consoleOutput[256];
-//    const char*   cmdSendPic    = "/usr/bin/python /mnt/flash/sendPic.py /mnt/flash/my.gif";
-//    
-//
-////    initHeartbeat();
-//    sendSystemCommand(cmdSendPic,consoleOutput, sizeof(consoleOutput));
 
     smsmt_Receiver();
 //    smsmo_SendMessage(destinationPtr,consoleOutput);
