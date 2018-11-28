@@ -201,14 +201,18 @@ static void photoStatus
 
 void smsHandler(char *aSmsBody,char *aSenderNb) {
     char smsContent[100];
+    char senderNb[18];
     char cmd[256];
     const char*   cmdModyfyAlert    = "/usr/bin/python /mnt/flash/modifyNotification.py";
     memcpy(smsContent,aSmsBody,sizeof(smsContent));
+    memcpy(senderNb,aSenderNb,sizeof(senderNb));
     memset(cmd, 0, sizeof(cmd));
     
     toLowerCase(smsContent,strlen(smsContent));
     RemoveCharInString(smsContent, strlen(smsContent),' ');
     RemoveCharInString(smsContent, strlen(smsContent),'\n');
+    RemoveCharInString(senderNb, strlen(senderNb),' ');
+    RemoveCharInString(senderNb, strlen(senderNb),'\n');
 
     LE_INFO("SMS content    : %s => length : %d",smsContent,strlen(smsContent));
     if ( 0 == strncmp(smsContent,C_CMD_PHOTO,strlen(C_CMD_PHOTO)) ) {
@@ -216,19 +220,23 @@ void smsHandler(char *aSmsBody,char *aSenderNb) {
         photoStatus();
     }
     else if ( 0 == strncmp(smsContent,C_CMD_ADDPHONE,strlen(C_CMD_ADDPHONE)) ) {
-        LE_INFO("Add Phone number command: %s",aSenderNb);
+        LE_INFO("Add Phone number command: %s",senderNb);
+        snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_ADDPHONE,senderNb);
+        sendSystemCommand(cmd,NULL, 0);
     }
     else if ( 0 == strncmp(smsContent,C_CMD_REMOVEPHONE,strlen(C_CMD_REMOVEPHONE)) ) {
-        LE_INFO("Remove Phone number command: %s",aSenderNb);    
+        LE_INFO("Remove Phone number command: %s",senderNb);    
+        snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_REMOVEPHONE,senderNb);
+        sendSystemCommand(cmd,NULL, 0);
     }
     else if ( 0 == strncmp(smsContent,C_CMD_ADDEMAIL,strlen(C_CMD_ADDEMAIL)) ) {
         LE_INFO("Add email command");   
-        snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_ADDEMAIL,smsContent);
+        snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_ADDEMAIL,&smsContent[strlen(C_CMD_ADDEMAIL)]);
         sendSystemCommand(cmd,NULL, 0);
     }
     else if ( 0 == strncmp(smsContent,C_CMD_REMOVEEMAIL,strlen(C_CMD_REMOVEEMAIL)) ) {
         LE_INFO("Remove email command"); 
-        snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_REMOVEEMAIL,smsContent);
+        snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_REMOVEEMAIL,&smsContent[strlen(C_CMD_REMOVEEMAIL)]);
         sendSystemCommand(cmd,NULL, 0);
     }
     else {
