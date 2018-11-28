@@ -17,9 +17,8 @@
  *
  */
 //--------------------------------------------------------------------------------------------------
-    const char*   destinationPtr = "+33625921232"; ///< [IN] The destination number.
-//    const char*   destinationPtr = "+33677291019"; ///< Gregory
-//    const char*   destinationPtr = "+33761428366"; ///Cedric Grimault
+    const char*   destinationPtr = "+33612345678"; ///< [IN] The destination number.
+
 
 
 void sendSystemCommand(const char *aCmd,char *aCmdOutput,int aCmdOutputSize) {
