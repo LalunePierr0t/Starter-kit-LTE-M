@@ -43,7 +43,6 @@ static bool LedOn;
 /**
  * Live Objects Settings
  */
-
 char* NAMESPACE = "starterkit"; //device identifier namespace (device model, identifier class...)
 char imei[20]; //device identifier (IMEI, Serial Number, MAC adress...)
 
@@ -170,6 +169,30 @@ void RemoveCharInString(char* aString, int aStringSize,char aCharToremove)
     }
 }
 
+int takePhoto(char* aFileName) {
+    int rc = false;
+    Camera cam = {
+        .devPath="/dev/ttyUSB0", .serialNum = 0x00, .speed = B115200
+    };
+    camSetFileToSave(aFileName);
+    
+    rc = camOpenSerial(&cam);
+    LE_INFO("Open CAM       : %s", (rc > 0) ? "OK":"KO" );
+    rc = camSendCommand(E_DISABLE_COMPRESSION);
+    LE_INFO("Command : %s  : %s", camGetCommandName(E_DISABLE_COMPRESSION), (true == rc) ? "OK":"KO" );
+    rc = camSendCommand(E_STOP_CAPTURE);
+    LE_INFO("Command : %s  : %s", camGetCommandName(E_STOP_CAPTURE), (true == rc) ? "OK":"KO" );
+    rc = camSendCommand(E_CAPTURE_IMAGE);
+    LE_INFO("Command : %s  : %s", camGetCommandName(E_CAPTURE_IMAGE), (true == rc) ? "OK":"KO" );
+    rc = camSendCommand(E_IMAGE_DATA_LENGTH);
+    LE_INFO("Command : %s  : %s", camGetCommandName(E_IMAGE_DATA_LENGTH), (true == rc) ? "OK":"KO" );
+    rc = camSendCommand(E_GET_IMAGE);
+    LE_INFO("Command : %s  : %s", camGetCommandName(E_GET_IMAGE), (true == rc) ? "OK":"KO" );
+    camSendCommand(E_RESET);
+    camCloseSerial();
+    return rc;
+}
+
 static void photoStatus
 (
     void
@@ -180,10 +203,19 @@ static void photoStatus
 
     char payload[100] = "";
     char consoleOutput[256];
-    const char*   cmdSendPic    = "/usr/bin/python /mnt/flash/sendPic.py /mnt/flash/my.gif";
+    const char*   cmdSendPic    = "/usr/bin/python /mnt/flash/sendPic.py ";
+    char cmdUpLoadFile[256];
+    char tryPic = 0;
+
+    char fileToSave[MAX_PATH_SIZE];
+    do {
+        memset(fileToSave,0,sizeof(fileToSave));
+        snprintf(fileToSave,sizeof(fileToSave),"%s%d.jpg","/tmp/",(int)time(0));
+        tryPic++;
+    } while( (false == takePhoto(fileToSave)) && (tryPic <= 3) );
     
-    
-    sendSystemCommand(cmdSendPic,consoleOutput, sizeof(consoleOutput));
+    snprintf(cmdUpLoadFile,sizeof(cmdUpLoadFile),"%s%s",cmdSendPic,fileToSave);
+    sendSystemCommand(cmdUpLoadFile,consoleOutput, sizeof(consoleOutput));
     RemoveCharInString(consoleOutput, sizeof(consoleOutput),' ');
     RemoveCharInString(consoleOutput, sizeof(consoleOutput),'\n');
 //    smsmo_SendMessage(destinationPtr,consoleOutput);

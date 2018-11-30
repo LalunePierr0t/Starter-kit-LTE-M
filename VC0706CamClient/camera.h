@@ -52,7 +52,7 @@ LE_SHARED int camSendCommand(camCmdListName_t aCmd);
 
 LE_SHARED const char * camGetCommandName(camCmdListName_t aCmd);
 
-LE_SHARED void setFileToSave(char * aFileToSave);
+LE_SHARED void camSetFileToSave(char * aFileToSave);
 
 
 #endif

@@ -158,6 +158,6 @@ const char * camGetCommandName(camCmdListName_t aCmd) {
  }
 
 
-void setFileToSave(char * aFileToSave) {
+void camSetFileToSave(char * aFileToSave) {
     snprintf(gFileToSave,sizeof(gFileToSave),"%s",aFileToSave);
 }

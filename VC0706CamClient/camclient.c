@@ -8,7 +8,7 @@ int takePhoto(Camera* cam, char* dirPath) {
     int rc = false;
     char fileToSave[MAX_PATH_SIZE];
     snprintf(fileToSave,sizeof(fileToSave),"%s%d.jpg",dirPath,(int)time(0));
-    setFileToSave(fileToSave);
+    camSetFileToSave(fileToSave);
     
     rc = camOpenSerial(cam);
     LE_INFO("Open CAM       : %s", (rc > 0) ? "OK":"KO" );
