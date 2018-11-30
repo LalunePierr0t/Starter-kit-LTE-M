@@ -10,6 +10,7 @@ cflags:
 	-I $CURDIR/../LiveObjects
 	-I $CURDIR/../dataProfileComponent
 	-I $CURDIR/../smsClient
+	-I $CURDIR/../VC0706CamClient
 }
 
 requires:

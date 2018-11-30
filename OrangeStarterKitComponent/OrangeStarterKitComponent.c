@@ -19,6 +19,7 @@
 #include "legato.h"
 #include "interfaces.h"
 #include "smsSample.h"
+#include "camera.h"
 
 //--------------------------------------------------------------------------------------------------
 /**
@@ -42,7 +43,6 @@ static bool LedOn;
 /**
  * Live Objects Settings
  */
-
 
 char* NAMESPACE = "starterkit"; //device identifier namespace (device model, identifier class...)
 char imei[20]; //device identifier (IMEI, Serial Number, MAC adress...)

@@ -2,7 +2,7 @@ sandboxed: false
 
 executables:
 {
-	OrangeStarterKit = ( smsClient OrangeStarterKitComponent dataProfileComponent LiveObjects  )
+	OrangeStarterKit = ( VC0706CamClient smsClient OrangeStarterKitComponent dataProfileComponent LiveObjects  )
 }
 
 processes:
