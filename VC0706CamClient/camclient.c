@@ -11,7 +11,7 @@ int takePhoto(Camera* cam, char* dirPath) {
     camSetFileToSave(fileToSave);
     
     rc = camOpenSerial(cam);
-    LE_INFO("Open CAM       : %s", (rc > 0) ? "OK":"KO" );
+    LE_INFO("Open CAM: %s", (rc > 0) ? "OK":"KO" );
     rc = camSendCommand(E_DISABLE_COMPRESSION);
     LE_INFO("Command : %s  : %s", camGetCommandName(E_DISABLE_COMPRESSION), (true == rc) ? "OK":"KO" );
     rc = camSendCommand(E_STOP_CAPTURE);

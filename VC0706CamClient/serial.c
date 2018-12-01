@@ -8,12 +8,6 @@ int serialOpen(char *aSerialPortName, speed_t aSpeed)
 {
     struct termios tio;
 
-    FILE *fp;
-    fp = NULL;
-
-    fp = popen("ash && modprobe ftdi_sio","r");
-    pclose(fp);
-    
     memset(&tio, 0, sizeof(tio));
     tio.c_iflag = 0;
     tio.c_oflag = 0;

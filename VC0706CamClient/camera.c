@@ -10,16 +10,16 @@ const unsigned char captureImageCMD[]       = { 0x56 ,0x00 ,0x36 ,0x01 ,0x00 };
 const unsigned char captureImageACK[]       = { 0x76 ,0x00 ,0x36 ,0x00 ,0x00 };
 
 const unsigned char imageDataLengthCMD[]    = { 0x56 ,0x00 ,0x34 ,0x01 ,0x00 };
-const unsigned char imageDataLengthACK[]    = { 0x76 ,0x00 ,0x34 ,0x00 ,0x04 ,0x00 ,0x00};
+const unsigned char imageDataLengthACK[]    = { 0x76 ,0x00 ,0x34 ,0x00 ,0x04 ,0x00 ,0x00 };
 
 const unsigned char getImageCMD[]           = { 0x56 ,0x00 ,0x32 ,0x0C ,0x00 ,0x0A ,0x00 ,0x00, 0x00, 0x00, 0x00, 0x00 };
-const unsigned char getImageACK[]           = { 0x76 ,0x00 ,0x32 ,0x00 ,0x00, 0xFF, 0xD8 };
+const unsigned char getImageACK[]           = { 0x76 ,0x00 ,0x32 ,0x00 ,0x00 };
 
 const unsigned char resetCMD[]              = { 0x56 ,0x00 ,0x26 ,0x00 };
 const unsigned char resetACK[]              = {  };
 
 const unsigned char disableCompressionCMD[] = { 0x56 ,0x00 ,0x31 ,0x05 ,0x01 ,0x01 ,0x12 ,0x04 ,0x00 };
-const unsigned char disableCompressionACK[] = { 0x76 ,0x00 ,0x31 ,0x00 ,0x00};
+const unsigned char disableCompressionACK[] = { 0x76 ,0x00 ,0x31 ,0x00 ,0x00 };
 
 
 const camCMD_t camCmdList[E_SIZEOF_CAMCMDLISTNAME] = {
@@ -69,10 +69,12 @@ void camSetImageLengthForTransfert(void) {
 int camReceiveAndSaveJpg(void) {
     int rc = 0;
   
-    FILE* filePtr = fopen(gFileToSave, "w");
+    FILE* filePtr; 
     unsigned char byte;
     int bufferSize;
     int bufferSizeOrg;
+    
+    filePtr = fopen(gFileToSave, "w");
     
     bufferSize = gDataImageLengthHigh;
     bufferSize <<= 8;
@@ -80,27 +82,21 @@ int camReceiveAndSaveJpg(void) {
     
     bufferSizeOrg = bufferSize;
     
-    LE_INFO("Photo size : %d bytes",bufferSize+2);
+    LE_DEBUG("Photo size : %d bytes",bufferSize+2);
     
-    // Save Jpeg marker
-    byte = 0xFF;
-    fwrite (&byte , sizeof(char), sizeof(char), filePtr);
-    byte = 0xD8;    
-    fwrite (&byte , sizeof(char), sizeof(char), filePtr);
-
     while (bufferSize > 0) {
         rc = serialReadByte(&byte, TTY_TIMEOUT);
         fwrite (&byte , sizeof(char), sizeof(char), filePtr);
         if (C_SERIAL_ERROR_TIMEOUT == rc) { // If we receivd 95% of the image we consider thats OK
             int receivedPercentage = ((bufferSize*100)/bufferSizeOrg);
             if (  receivedPercentage > C_MIN_PHOTO_RECEIVED_TO_BE_OK_THRESHOLD) {
-                LE_INFO("Photo received at %02d %%, OK",receivedPercentage);
+                LE_WARN("Photo received at %02d %%, OK",receivedPercentage);
                 rc = true;
                 fclose(filePtr);
                 return rc;
             }
             else {
-                LE_INFO("Photo received at %02d %%, KO",receivedPercentage);
+                LE_ERROR("Photo received at %02d %%, KO",receivedPercentage);
                 rc = false;
                 fclose(filePtr);
                 return rc;
@@ -108,13 +104,13 @@ int camReceiveAndSaveJpg(void) {
         }
         bufferSize--;
     }
-    rc = true;
     fclose(filePtr);
+    rc = true;
     return rc;
 }
  
  int camSendCommand(camCmdListName_t aCmd) {
-         unsigned char byte  = 0;
+    unsigned char byte  = 0;
     int rc  =  true ;
     // Set 
     for (int i = 0; i< camCmdList[aCmd].cmdDataSize; i++) {
@@ -143,8 +139,8 @@ int camReceiveAndSaveJpg(void) {
         gDataImageLengthHigh = byte;
         serialReadByte(&byte, TTY_TIMEOUT);
         gDataImageLengthLow  = byte;
-        LE_INFO("gDataImageLengthHigh    : 0x%02X",gDataImageLengthHigh);
-        LE_INFO("gDataImageLengthLow     : 0x%02X",gDataImageLengthLow);
+        LE_DEBUG("gDataImageLengthHigh    : 0x%02X",gDataImageLengthHigh);
+        LE_DEBUG("gDataImageLengthLow     : 0x%02X",gDataImageLengthLow);
     }
     // when getting image, we need to store it
     else if (E_GET_IMAGE == aCmd) {
