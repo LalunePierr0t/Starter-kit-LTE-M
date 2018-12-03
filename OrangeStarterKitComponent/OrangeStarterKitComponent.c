@@ -209,6 +209,7 @@ static void photoStatus
 
     char fileToSave[MAX_PATH_SIZE];
     do {
+        if (tryPic > 0) sleep(3);
         memset(fileToSave,0,sizeof(fileToSave));
         snprintf(fileToSave,sizeof(fileToSave),"%s%d.jpg","/tmp/",(int)time(0));
         tryPic++;
@@ -255,21 +256,33 @@ void smsHandler(char *aSmsBody,char *aSenderNb) {
         LE_INFO("Add Phone number command: %s",senderNb);
         snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_ADDPHONE,senderNb);
         sendSystemCommand(cmd,NULL, 0);
+        memset(cmd, 0, sizeof(cmd));
+        snprintf(cmd,sizeof(cmd),"%s added to alert",senderNb);
+        smsmo_SendMessage(senderNb,cmd);
     }
     else if ( 0 == strncmp(smsContent,C_CMD_REMOVEPHONE,strlen(C_CMD_REMOVEPHONE)) ) {
         LE_INFO("Remove Phone number command: %s",senderNb);    
         snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_REMOVEPHONE,senderNb);
         sendSystemCommand(cmd,NULL, 0);
+        memset(cmd, 0, sizeof(cmd));
+        snprintf(cmd,sizeof(cmd),"%s removed from alert",senderNb);
+        smsmo_SendMessage(senderNb,cmd);
     }
     else if ( 0 == strncmp(smsContent,C_CMD_ADDEMAIL,strlen(C_CMD_ADDEMAIL)) ) {
         LE_INFO("Add email command");   
         snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_ADDEMAIL,&smsContent[strlen(C_CMD_ADDEMAIL)]);
         sendSystemCommand(cmd,NULL, 0);
+        memset(cmd, 0, sizeof(cmd));
+        snprintf(cmd,sizeof(cmd),"%s added to alert",&smsContent[strlen(C_CMD_ADDEMAIL)]);
+        smsmo_SendMessage(senderNb,cmd);
     }
     else if ( 0 == strncmp(smsContent,C_CMD_REMOVEEMAIL,strlen(C_CMD_REMOVEEMAIL)) ) {
         LE_INFO("Remove email command"); 
         snprintf(cmd,sizeof(cmd), "%s %s %s",cmdModyfyAlert,C_CMD_REMOVEEMAIL,&smsContent[strlen(C_CMD_REMOVEEMAIL)]);
         sendSystemCommand(cmd,NULL, 0);
+        memset(cmd, 0, sizeof(cmd));
+        snprintf(cmd,sizeof(cmd),"%s removed from alert",&smsContent[strlen(C_CMD_REMOVEEMAIL)]);
+        smsmo_SendMessage(senderNb,cmd);
     }
     else {
         LE_INFO("Unknow command !");

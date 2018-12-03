@@ -17,7 +17,6 @@
  *
  */
 //--------------------------------------------------------------------------------------------------
-    const char*   destinationPtr = "+33612345678"; ///< [IN] The destination number.
 
 
 
@@ -49,7 +48,6 @@ void sendSystemCommand(const char *aCmd,char *aCmdOutput,int aCmdOutputSize) {
     LE_INFO("SMS Starting");
 
     smsmt_Receiver();
-//    smsmo_SendMessage(destinationPtr,consoleOutput);
    
     smsmt_MonitorStorage();
 }
