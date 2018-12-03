@@ -11,6 +11,7 @@ cflags:
 	-I $CURDIR/../dataProfileComponent
 	-I $CURDIR/../smsClient
 	-I $CURDIR/../VC0706CamClient
+	-I $CURDIR/../ioRaspiComponent
 }
 
 requires:

@@ -1,0 +1,12 @@
+requires:
+{
+    api:
+    {
+        mangoh_button = le_gpio.api
+    }
+}
+
+sources:
+{
+    ioRaspi.c
+}

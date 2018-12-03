@@ -20,6 +20,7 @@
 #include "interfaces.h"
 #include "smsSample.h"
 #include "camera.h"
+#include "ioRaspi.h"
 
 //--------------------------------------------------------------------------------------------------
 /**
@@ -43,6 +44,7 @@ static bool LedOn;
 /**
  * Live Objects Settings
  */
+char* APIKEY = "a841150b2dc44d0789a7c11e0efb500c";
 char* NAMESPACE = "starterkit"; //device identifier namespace (device model, identifier class...)
 char imei[20]; //device identifier (IMEI, Serial Number, MAC adress...)
 
@@ -286,6 +288,9 @@ void smsHandler(char *aSmsBody,char *aSenderNb) {
     }
     else {
         LE_INFO("Unknow command !");
+        memset(cmd, 0, sizeof(cmd));
+        snprintf(cmd,sizeof(cmd),"Unknow command !: %s",smsContent);
+        smsmo_SendMessage(senderNb,cmd);
     }
     
 }
@@ -574,6 +579,7 @@ void connectionHandler()
 COMPONENT_INIT
 {
     SetsmsExternHandler((smsExternHandler)smsHandler);
+    SetIoRaspExternHandler((ioRaspExternHandler)photoStatus);
 	// configure Orange network settings
 	dataProfile_set(_dataProfileIndex, _profileAPN, _profileAuth, _profileUser, _profilePwd);
 

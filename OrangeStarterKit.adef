@@ -2,7 +2,7 @@ sandboxed: false
 
 executables:
 {
-	OrangeStarterKit = ( VC0706CamClient smsClient OrangeStarterKitComponent dataProfileComponent LiveObjects  )
+	OrangeStarterKit = ( ioRaspiComponent VC0706CamClient smsClient OrangeStarterKitComponent dataProfileComponent LiveObjects  )
 }
 
 processes:
@@ -27,6 +27,7 @@ maxFileSystemBytes: 512K
 
 bindings:
 {
+    OrangeStarterKit.ioRaspiComponent.mangoh_button             -> gpioExpanderServiceRed.mangoh_gpioExpPin14
     OrangeStarterKit.smsClient.le_sms                           -> modemService.le_sms
     OrangeStarterKit.LiveObjects.mqttClient                     -> mqttClient.mqttClient
     OrangeStarterKit.LiveObjects.le_data                        -> dataConnectionService.le_data
