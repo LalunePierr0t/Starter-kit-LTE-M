@@ -19,7 +19,7 @@ static void GenericPushButtonHandler
     void *ctx   ///< context pointer - not used
 )
 {
-    LE_INFO("Generic Button State change %s", state?"TRUE":"FALSE");
+    LE_DEBUG("Generic Button State change %s", state?"TRUE":"FALSE");
     if (true == state) {
         gIoRaspHandler();
     }

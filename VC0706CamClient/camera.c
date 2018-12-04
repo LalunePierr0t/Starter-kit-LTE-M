@@ -23,17 +23,17 @@ const unsigned char disableCompressionACK[] = { 0x76 ,0x00 ,0x31 ,0x00 ,0x00 };
 
 
 const camCMD_t camCmdList[E_SIZEOF_CAMCMDLISTNAME] = {
-    {.cmdName="Stop Capture"            ,   .cmdData=stopCaptureCMD,            .cmdDataSize=sizeof(stopCaptureCMD), 
+    {.cmdName="Stop Capture         "   ,   .cmdData=stopCaptureCMD,            .cmdDataSize=sizeof(stopCaptureCMD), 
                                             .cmdDataACK=stopCaptureACK,         .cmdDataACKSize=sizeof(stopCaptureACK)          },
     {.cmdName="Capture Image Capture"   ,   .cmdData=captureImageCMD,           .cmdDataSize=sizeof(captureImageCMD), 
                                             .cmdDataACK=captureImageACK,        .cmdDataACKSize=sizeof(captureImageACK)         },
     {.cmdName="Get Image Data Length"   ,   .cmdData=imageDataLengthCMD,        .cmdDataSize=sizeof(imageDataLengthCMD), 
                                             .cmdDataACK=imageDataLengthACK,     .cmdDataACKSize=sizeof(imageDataLengthACK)      },
-    {.cmdName="Get Image"               ,   .cmdData=getImageCMD,               .cmdDataSize=sizeof(getImageCMD), 
+    {.cmdName="Get Image            "   ,   .cmdData=getImageCMD,               .cmdDataSize=sizeof(getImageCMD), 
                                             .cmdDataACK=getImageACK,            .cmdDataACKSize=sizeof(getImageACK)             },
-    {.cmdName="Reset"                   ,   .cmdData=resetCMD,                  .cmdDataSize=sizeof(resetCMD), 
+    {.cmdName="Reset                "   ,   .cmdData=resetCMD,                  .cmdDataSize=sizeof(resetCMD), 
                                             .cmdDataACK=resetACK,               .cmdDataACKSize=sizeof(resetACK)                },
-    {.cmdName="Disable Compression"     ,   .cmdData=disableCompressionCMD,     .cmdDataSize=sizeof(disableCompressionCMD), 
+    {.cmdName="Disable Compression  "   ,   .cmdData=disableCompressionCMD,     .cmdDataSize=sizeof(disableCompressionCMD), 
                                             .cmdDataACK=disableCompressionACK,  .cmdDataACKSize=sizeof(disableCompressionACK)   },
 };
 

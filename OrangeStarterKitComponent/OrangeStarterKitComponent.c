@@ -44,7 +44,6 @@ static bool LedOn;
 /**
  * Live Objects Settings
  */
-char* APIKEY = "a841150b2dc44d0789a7c11e0efb500c";
 char* NAMESPACE = "starterkit"; //device identifier namespace (device model, identifier class...)
 char imei[20]; //device identifier (IMEI, Serial Number, MAC adress...)
 
@@ -67,6 +66,8 @@ int count = 0;
 
 static const char PressureFile[] = "/sys/devices/i2c-0/0-0076/iio:device1/in_pressure_input";
 static const char TemperatureFile[] = "/sys/devices/i2c-0/0-0076/iio:device1/in_temp_input";
+
+void connectionHandler();
 
 void sendSystemCommand(const char *aCmd,char *aCmdOutput,int aCmdOutputSize) {
     
@@ -179,7 +180,7 @@ int takePhoto(char* aFileName) {
     camSetFileToSave(aFileName);
     
     rc = camOpenSerial(&cam);
-    LE_INFO("Open CAM       : %s", (rc > 0) ? "OK":"KO" );
+    LE_INFO("Open CAM: %s", (rc > 0) ? "OK":"KO" );
     rc = camSendCommand(E_DISABLE_COMPRESSION);
     LE_INFO("Command : %s  : %s", camGetCommandName(E_DISABLE_COMPRESSION), (true == rc) ? "OK":"KO" );
     rc = camSendCommand(E_STOP_CAPTURE);
@@ -202,10 +203,12 @@ static void photoStatus
 {
     char* model = "on";
     char* tags = "[\"photo\", \"url\"]";
+    le_result_t rc;
+    int camReturn;
 
     char payload[100] = "";
     char consoleOutput[256];
-    const char*   cmdSendPic    = "/usr/bin/python /mnt/flash/sendPic.py ";
+    const char*   cmdSendPic    = "/usr/bin/python /mnt/flash/sendPic.py";
     char cmdUpLoadFile[256];
     char tryPic = 0;
 
@@ -215,17 +218,24 @@ static void photoStatus
         memset(fileToSave,0,sizeof(fileToSave));
         snprintf(fileToSave,sizeof(fileToSave),"%s%d.jpg","/tmp/",(int)time(0));
         tryPic++;
-    } while( (false == takePhoto(fileToSave)) && (tryPic <= 3) );
+        camReturn = takePhoto(fileToSave);
+    } while( (false == camReturn) && (tryPic <= 3) );
     
-    snprintf(cmdUpLoadFile,sizeof(cmdUpLoadFile),"%s%s",cmdSendPic,fileToSave);
-    sendSystemCommand(cmdUpLoadFile,consoleOutput, sizeof(consoleOutput));
-    RemoveCharInString(consoleOutput, sizeof(consoleOutput),' ');
-    RemoveCharInString(consoleOutput, sizeof(consoleOutput),'\n');
+    if(true == camReturn) {
+        snprintf(cmdUpLoadFile,sizeof(cmdUpLoadFile),"%s %s",cmdSendPic,fileToSave);
+        sendSystemCommand(cmdUpLoadFile,consoleOutput, sizeof(consoleOutput));
+        RemoveCharInString(consoleOutput, sizeof(consoleOutput),' ');
+        RemoveCharInString(consoleOutput, sizeof(consoleOutput),'\n');
+        snprintf(payload,sizeof(payload), "{\"photoURL\":\"%s\"}", consoleOutput);
+    }
+    else {
+        snprintf(payload,sizeof(payload), "{\"photoURL\":\"%s\"}", "Camera KO");
+    }
 //    smsmo_SendMessage(destinationPtr,consoleOutput);
     
-    snprintf(payload,sizeof(payload), "{\"photoURL\":\"%s\"}", consoleOutput);
     // Reply with the photo url
-    liveobjects_pubData(cmdResultStreamID, payload, model, tags, latitude, longitude);
+    rc  = liveobjects_pubData(cmdResultStreamID, payload, model, tags, latitude, longitude);
+    LE_INFO("Send pic : %s",(LE_OK == rc) ? "OK":"KO");
 }
 
 #define C_CMD_PHOTO         "photo"

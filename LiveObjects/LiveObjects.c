@@ -158,17 +158,20 @@ void Connect
  *  payload : json payload
  */
 //--------------------------------------------------------------------------------------------------
-static void liveobjects_publish
+le_result_t liveobjects_publish
 (
     char* topic,
 	char* payload
 )
 {
+    le_result_t rc;
     if (mqttClient_IsConnected(_cliMqttRef))
     {
        	LE_INFO("[LO][Publish] %s : %s ", topic, payload);
-    	mqttClient_Publish(_cliMqttRef,  payload, strlen(payload), topic);
+    	rc = mqttClient_Publish(_cliMqttRef,  payload, strlen(payload), topic);
+        LE_INFO("Publish %s",(LE_OK != rc)? "Failed":"OK" );
     }
+    return rc;
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -183,7 +186,7 @@ static void liveobjects_publish
  *  "loc": [<<latitude>>, <<longitude>>]
  */
 //--------------------------------------------------------------------------------------------------
-void liveobjects_pubData
+le_result_t liveobjects_pubData
 (
 		char* streamid,
 		char* payload,
@@ -211,7 +214,7 @@ void liveobjects_pubData
 
 	LE_INFO("Publish data , %s", message);
 
-	liveobjects_publish(_topicData, message);
+	return liveobjects_publish(_topicData, message);
 }
 
 //--------------------------------------------------------------------------------------------------
@@ -458,7 +461,7 @@ void liveobjects_connect
 	void* connectionHandler
 )
 {
-
+    Disconnect(false);
 	_apikey = malloc(strlen(apikey));
 	strcpy(_apikey, apikey);
 	_deviceid = malloc(strlen(namespace)+ strlen(id) + 13);
