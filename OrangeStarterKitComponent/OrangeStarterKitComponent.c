@@ -196,20 +196,35 @@ int takePhoto(char* aFileName) {
     return rc;
 }
 
-void removAddTTY(void) {
+typedef enum {
+    E_REMOVE_TTY_USB,
+    E_ADD_TTY_USB,
+    E_NB_OF_COMMANDS
+} addOrRemoveTTY;
+
+void removAddTtyUSB(addOrRemoveTTY aCmd) {
     int fd;
     size_t image_size;
     struct stat st;
     void *image;
 
-    syscall(__NR_delete_module, "ftdi_sio",  O_NONBLOCK);                               // rmmod
-    fd = open("/lib/modules/3.18.44/kernel/drivers/usb/serial/ftdi_sio.ko", O_RDONLY);
-    fstat(fd, &st);
-    image_size = st.st_size;
-    image = malloc(image_size);
-    read(fd, image, image_size);
-    close(fd);
-    syscall(__NR_init_module, image, image_size, "");                                   // modprobe
+    switch(aCmd) {
+        case E_REMOVE_TTY_USB:
+            syscall(__NR_delete_module, "ftdi_sio",  O_NONBLOCK);                                   // rmmod
+            break;
+        case E_ADD_TTY_USB:
+                fd = open("/lib/modules/3.18.44/kernel/drivers/usb/serial/ftdi_sio.ko", O_RDONLY);
+                fstat(fd, &st);
+                image_size = st.st_size;
+                image = malloc(image_size);
+                read(fd, image, image_size);
+                close(fd);
+                syscall(__NR_init_module, image, image_size, "");                                   // modprobe
+                break;
+        default:
+            LE_DEBUG("Unknow command : %d",(int)aCmd);
+            break;
+    }
 }
 
 static void photoStatus
@@ -232,7 +247,8 @@ static void photoStatus
 
     do {
         if (tryPic > 0) {
-            removAddTTY();
+            removAddTtyUSB(E_REMOVE_TTY_USB);
+            removAddTtyUSB(E_ADD_TTY_USB);
             sleep(3);
         }
         memset(fileToSave,0,sizeof(fileToSave));
@@ -251,7 +267,6 @@ static void photoStatus
     else {
         snprintf(payload,sizeof(payload), "{\"photoURL\":\"%s\"}", "Camera KO");
     }
-//    smsmo_SendMessage(destinationPtr,consoleOutput);
     
     // Reply with the photo url
     rc  = liveobjects_pubData(cmdResultStreamID, payload, model, tags, latitude, longitude);
@@ -608,6 +623,7 @@ void connectionHandler()
 //--------------------------------------------------------------------------------------------------
 COMPONENT_INIT
 {
+    removAddTtyUSB(E_ADD_TTY_USB);
     SetsmsExternHandler((smsExternHandler)smsHandler);
     SetIoRaspExternHandler((ioRaspExternHandler)photoStatus);
 	// configure Orange network settings
