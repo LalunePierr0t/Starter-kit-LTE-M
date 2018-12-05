@@ -196,6 +196,22 @@ int takePhoto(char* aFileName) {
     return rc;
 }
 
+void removAddTTY(void) {
+    int fd;
+    size_t image_size;
+    struct stat st;
+    void *image;
+
+    syscall(__NR_delete_module, "ftdi_sio",  O_NONBLOCK);                               // rmmod
+    fd = open("/lib/modules/3.18.44/kernel/drivers/usb/serial/ftdi_sio.ko", O_RDONLY);
+    fstat(fd, &st);
+    image_size = st.st_size;
+    image = malloc(image_size);
+    read(fd, image, image_size);
+    close(fd);
+    syscall(__NR_init_module, image, image_size, "");                                   // modprobe
+}
+
 static void photoStatus
 (
     void
@@ -213,8 +229,12 @@ static void photoStatus
     char tryPic = 0;
 
     char fileToSave[MAX_PATH_SIZE];
+
     do {
-        if (tryPic > 0) sleep(3);
+        if (tryPic > 0) {
+            removAddTTY();
+            sleep(3);
+        }
         memset(fileToSave,0,sizeof(fileToSave));
         snprintf(fileToSave,sizeof(fileToSave),"%s%d.jpg","/tmp/",(int)time(0));
         tryPic++;
